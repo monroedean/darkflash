@@ -1,0 +1,33 @@
+{
+  "name": "darkflash",
+  "version": "0.1.0",
+  "description": "Content-responsive physical monitor brightness for Windows 10",
+  "main": "dist/main/index.js",
+  "license": "MIT",
+  "author": "Dean Monroe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monroedean/darkflash.git"
+  },
+  "private": true,
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-static.mjs",
+    "clean": "node scripts/clean.mjs",
+    "dev": "npm run build && electron .",
+    "start": "electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package:win": "node scripts/package-windows.mjs"
+  },
+  "dependencies": {
+    "koffi": "3.1.6"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "@types/node": "22.18.0",
+    "electron": "43.4.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}
