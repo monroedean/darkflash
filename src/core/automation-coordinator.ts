@@ -44,33 +44,33 @@ export class AutomationCoordinator {
   async refreshDisplays(): Promise<void> {
     const displays = await this.dependencies.displays.enumerate();
     const now = this.dependencies.clock.now();
-    const discovered = await Promise.all(
-      displays.map(async (device) => {
-        let capability: BrightnessCapability | null;
-        let probeError: unknown;
-        if (device.control.kind === "ddc") {
-          try {
-            capability = await this.dependencies.brightness.probe(
-              device.control.endpointId,
-            );
-          } catch (error) {
-            capability = null;
-            probeError = error;
-          }
-        } else {
+    const discovered: Array<readonly [string, MonitorRuntime]> = [];
+    for (const device of displays) {
+      let capability: BrightnessCapability | null;
+      let probeError: unknown;
+      if (device.control.kind === "ddc") {
+        try {
+          capability = await this.dependencies.brightness.probe(
+            device.control.endpointId,
+          );
+        } catch (error) {
           capability = null;
+          probeError = error;
         }
-        const runtime: MonitorRuntime = {
-          device,
-          capability,
-          settings:
-            this.settings.monitors[device.id] ?? DEFAULT_MONITOR_SETTINGS,
-          smoothedBrightness: capability?.current ?? 0,
-          lastTickAt: now,
-          status:
-            device.control.kind === "discovery-error"
-              ? { kind: "error", message: device.control.message }
-              : device.control.kind === "unsupported"
+      } else {
+        capability = null;
+      }
+      const runtime: MonitorRuntime = {
+        device,
+        capability,
+        settings:
+          this.settings.monitors[device.id] ?? DEFAULT_MONITOR_SETTINGS,
+        smoothedBrightness: capability?.current ?? 0,
+        lastTickAt: now,
+        status:
+          device.control.kind === "discovery-error"
+            ? { kind: "error", message: device.control.message }
+            : device.control.kind === "unsupported"
               ? {
                   kind: "unsupported",
                   message: "Physical brightness control is unavailable",
@@ -85,18 +85,17 @@ export class AutomationCoordinator {
                   : this.settings.enabled
                     ? { kind: "active" }
                     : { kind: "disabled" },
-          ...(capability === null
-            ? {}
-            : { lastCommand: capability.current, lastCommandAt: now }),
-          lastVerificationAt: now,
-          consecutiveFailures: 0,
-          nextAttemptAt: 0,
-          needsReassert: false,
-        };
-        if (probeError) scheduleRetry(runtime, now);
-        return [device.id, runtime] as const;
-      }),
-    );
+        ...(capability === null
+          ? {}
+          : { lastCommand: capability.current, lastCommandAt: now }),
+        lastVerificationAt: now,
+        consecutiveFailures: 0,
+        nextAttemptAt: 0,
+        needsReassert: false,
+      };
+      if (probeError) scheduleRetry(runtime, now);
+      discovered.push([device.id, runtime]);
+    }
     this.monitors.clear();
     for (const [id, runtime] of discovered) this.monitors.set(id, runtime);
     if (

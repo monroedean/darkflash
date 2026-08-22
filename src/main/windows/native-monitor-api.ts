@@ -65,7 +65,7 @@ interface PhysicalMonitorGroup {
 }
 
 interface EnumeratedMonitor extends NativeMonitorDescriptor {
-  readonly handle: bigint;
+  readonly handle: bigint | null;
   readonly group: PhysicalMonitorGroup;
 }
 
@@ -307,9 +307,8 @@ function enumeratePhysicalMonitor(
     physicalCount,
   ) as PhysicalMonitorValue[];
   return physicalMonitors.map((physical, index) => {
-    if (physical.hPhysicalMonitor === null) {
-      throw new Error("Windows returned an invalid physical monitor handle");
-    }
+    // Dxva2 monitor handles are opaque; Windows can allocate zero as a valid
+    // value, so only the API result determines whether enumeration succeeded.
     const description = physical.szPhysicalMonitorDescription.trim();
     const identity =
       device.DeviceID?.trim() ||

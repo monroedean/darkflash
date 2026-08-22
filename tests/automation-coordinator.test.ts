@@ -485,6 +485,51 @@ describe("content-responsive automation", () => {
     );
   });
 
+  it("serializes physical monitor capability probes", async () => {
+    let activeProbes = 0;
+    let maximumActiveProbes = 0;
+    const displays: DisplayDevice[] = [
+      {
+        id: "left",
+        displayId: "left-display",
+        control: { kind: "ddc", endpointId: "left-endpoint" },
+        name: "Left",
+      },
+      {
+        id: "right",
+        displayId: "right-display",
+        control: { kind: "ddc", endpointId: "right-endpoint" },
+        name: "Right",
+      },
+    ];
+    const coordinator = new AutomationCoordinator({
+      clock: new TestClock(),
+      displays: { enumerate: async () => displays },
+      capture: { capture: async () => solidFrame(0) },
+      safety: { inspect: async () => ({ kind: "available" }) },
+      brightness: {
+        probe: async () => {
+          activeProbes += 1;
+          maximumActiveProbes = Math.max(maximumActiveProbes, activeProbes);
+          await new Promise((resolve) => setImmediate(resolve));
+          activeProbes -= 1;
+          return { minimum: 0, current: 50, maximum: 100 };
+        },
+        read: async () => 50,
+        set: async () => undefined,
+      },
+      settings: {
+        load: async () => ({ enabled: false, monitors: {} }),
+        save: async () => undefined,
+      },
+    });
+
+    await coordinator.start();
+
+    expect(maximumActiveProbes).toBe(1);
+    expect(coordinator.getSnapshot().monitors).toHaveLength(2);
+  });
+
   it("isolates capture failures per monitor and backs off retries", async () => {
     const clock = new TestClock();
     const displays: DisplayDevice[] = [
