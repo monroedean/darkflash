@@ -1,30 +1,30 @@
 # Darkflash
 
-Darkflash is a Windows 10 system-tray utility that adapts each external monitor's physical brightness to its own on-screen content. Bright pages move brightness toward your configured minimum; dark content moves it toward your maximum.
+Darkflash is a Windows tray app that adjusts each external monitor's physical brightness based on what's on that monitor. Bright pages push the brightness toward your configured minimum. Dark content pushes it toward your maximum.
 
-Darkflash controls real monitor brightness through DDC/CI. It never substitutes a dimming overlay, GPU gamma change, or color-pipeline adjustment when DDC/CI is unavailable.
+It changes the monitor's actual brightness through DDC/CI. If DDC/CI isn't available, Darkflash won't fake it with a dimming overlay, GPU gamma change, or color-pipeline adjustment.
 
 ## What it does
 
-- Samples a 96×54 image of each display once per second and discards it immediately after local analysis.
-- Uses linear-light perceptual luminance, center weighting, and outlier resistance so a small notification, sidebar, or letterbox has limited influence.
-- Smooths changes, ignores tiny movements, rate-limits monitor commands, and backs off after failures.
-- Keeps minimum, maximum, effect strength, and response speed settings per stable physical-monitor identity.
-- Pauses on a locked or suspended session, HDR output, protected content, unsupported full-screen windows, or unavailable capture while preserving the last stable physical brightness.
-- Isolates every monitor's DDC/CI calls in a bounded worker so an unresponsive device cannot freeze the tray UI.
-- Stores settings locally and includes no telemetry or network path.
+- Once a second, Darkflash samples a 96×54 image of each display. It analyzes the image locally and immediately discards it.
+- It calculates brightness with linear-light perceptual luminance, gives the center more weight, and resists outliers. A small notification, sidebar, or letterbox won't have much influence.
+- It smooths changes, ignores tiny movements, limits how often it sends monitor commands, and backs off after failures.
+- It saves the minimum, maximum, effect strength, and response speed for each stable physical-monitor identity.
+- It pauses when the session is locked or suspended, HDR is on, content is protected, a full-screen window isn't supported, or capture isn't available. The monitor stays at its last stable physical brightness.
+- It runs each monitor's DDC/CI calls in a bounded worker, so an unresponsive device can't freeze the tray UI.
+- It keeps all settings local. There's no telemetry or network path.
 
 ## Requirements
 
-- Windows 10 or newer, 64-bit.
-- An external monitor with DDC/CI brightness support. DDC/CI may need to be enabled in the monitor's on-screen menu.
-- Ordinary SDR desktop output. HDR and capture paths Electron cannot safely sample are paused, not guessed at.
+- 64-bit Windows 10 or newer.
+- An external monitor that supports DDC/CI brightness. You may need to enable DDC/CI in the monitor's on-screen menu.
+- Normal SDR desktop output. Darkflash pauses for HDR and for capture paths Electron can't safely sample. It doesn't guess.
 
-Internal laptop panels commonly use a different brightness interface and will normally appear as unsupported. Monitor DDC/CI implementations vary; validate real hardware before relying on automation.
+Internal laptop panels usually use a different brightness interface, so Darkflash will normally show them as unsupported. DDC/CI support varies between monitors, so test with the actual hardware before you rely on the automation.
 
 ## Development
 
-Install Node.js 22.12 or newer, then run:
+Install Node.js 22.12 or newer, then run these commands:
 
 ```sh
 npm install
@@ -33,29 +33,30 @@ npm run typecheck
 npm run build
 ```
 
-`npm run dev` starts the tray app. Platform-independent control-loop tests run on any supported Node platform; physical control runs only on Windows.
+`npm run dev` starts the tray app. You can run the platform-independent control-loop tests anywhere Node supports. Physical monitor control only works on Windows.
 
-To create an unpacked 64-bit Windows application:
+To build an unpacked 64-bit Windows app:
 
 ```sh
 npm run package:win
 ```
 
-The result is written to `release/Darkflash-win32-x64`. A polished installer and code signing are intentionally outside the first release.
+The build goes to `release/Darkflash-win32-x64`. An installer and code signing aren't part of the first release.
 
 ## Architecture
 
-The `AutomationCoordinator` owns policy and depends only on boundaries for display inventory, capture, safety state, time, settings, and brightness I/O. Tests drive that complete seam with synthetic frames and fake hardware. Electron supplies the tray, settings window, low-resolution capture, and session events. A Koffi-based Windows adapter calls `user32.dll` and `Dxva2.dll` from per-monitor worker threads.
+The `AutomationCoordinator` handles policy. It only depends on boundaries for display inventory, capture, safety state, time, settings, and brightness I/O. Tests cover that full seam with synthetic frames and fake hardware.
 
-See [the manual hardware test](docs/manual-hardware-test.md) before publishing a build.
-The direct dependency [license review](docs/dependency-licenses.md) records the first release's reuse decision.
+Electron provides the tray, settings window, low-resolution capture, and session events. A Koffi-based Windows adapter calls `user32.dll` and `Dxva2.dll` from a worker thread for each monitor.
+
+Run [the manual hardware test](docs/manual-hardware-test.md) before publishing a build. The direct dependency [license review](docs/dependency-licenses.md) explains the reuse decision for the first release.
 
 ## Privacy
 
-Captured pixels stay in memory, are reduced to one luminance measurement, and are then released. Darkflash does not write frames to disk, log pixel content, transmit data, or include telemetry.
+Captured pixels stay in memory just long enough to produce one luminance measurement. Darkflash then releases them. It doesn't write frames to disk, log pixel content, send data anywhere, or include telemetry.
 
 ## License
 
 Copyright © 2026 Dean Monroe.
 
-Darkflash is free software licensed under the [GNU General Public License version 3 only](LICENSE). It comes with absolutely no warranty.
+Darkflash is free software licensed under the [GNU General Public License version 3 only](LICENSE). It comes with no warranty.
