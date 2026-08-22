@@ -18,6 +18,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify:package-license": "node scripts/verify-package-license.mjs",
     "package:win": "node scripts/package-windows.mjs"
   },
   "dependencies": {

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { copyFile, rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -10,6 +11,11 @@ const applicationDirectory = join(
   "Darkflash-win32-x64",
   "resources",
   "app",
+);
+const packagedLicense = join(
+  outputDirectory,
+  "Darkflash-win32-x64",
+  "LICENSE",
 );
 
 await run(npm, ["run", "build"]);
@@ -48,6 +54,12 @@ await run(npm, [
   "--cpu=x64",
   "@koromix/koffi-win32-x64@3.1.6",
 ]);
+await rename(
+  packagedLicense,
+  join(outputDirectory, "Darkflash-win32-x64", "LICENSE.electron.txt"),
+);
+await copyFile("LICENSE", packagedLicense);
+await run(process.execPath, ["scripts/verify-package-license.mjs"]);
 
 function run(command, arguments_, extraEnvironment = {}) {
   return new Promise((resolve, reject) => {
