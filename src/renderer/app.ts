@@ -1,10 +1,3 @@
-import type {
-  AutomationSnapshot,
-  MonitorSettings,
-  MonitorSnapshot,
-  MonitorStatus,
-} from "../core/types.js";
-
 const appElement = requiredElement("app");
 let snapshot: AutomationSnapshot | undefined;
 let errorMessage = "";
