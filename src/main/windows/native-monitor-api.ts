@@ -9,6 +9,7 @@ import type {
   NativeMonitorDiscoveryResult,
   NativeMonitorDescriptor,
 } from "./ddc-protocol.js";
+import { probeBrightnessCapability } from "./brightness-capability-probe.js";
 
 type NativeFunction = (...args: any[]) => any;
 type KoffiType = ReturnType<typeof koffi.struct>;
@@ -116,20 +117,30 @@ export function discoverNativeMonitors(): NativeMonitorDiscoveryResult {
 export function probeNativeMonitor(
   endpointId: string,
 ): BrightnessCapability | null {
-  return withMonitor(endpointId, (monitor, api) => {
-    const capabilities = [0];
-    const temperatures = [0];
-    if (!api.GetMonitorCapabilities(monitor.handle, capabilities, temperatures)) {
-      throw win32Error(api, "Could not query DDC/CI capabilities");
-    }
-    if (((capabilities[0] ?? 0) & 0x2) === 0) return null;
-
-    const brightness = readBrightness(monitor, api);
-    if (!api.SetMonitorBrightness(monitor.handle, brightness.current)) {
-      throw win32Error(api, "The monitor rejected the DDC/CI write probe");
-    }
-    return brightness;
-  });
+  return withMonitor(endpointId, (monitor, api) =>
+    probeBrightnessCapability({
+      queryCapabilities: () => {
+        const capabilities = [0];
+        const temperatures = [0];
+        return {
+          succeeded: Boolean(
+            api.GetMonitorCapabilities(
+              monitor.handle,
+              capabilities,
+              temperatures,
+            ),
+          ),
+          flags: capabilities[0] ?? 0,
+        };
+      },
+      readBrightness: () => readBrightness(monitor, api),
+      writeBrightness: (brightness) => {
+        if (!api.SetMonitorBrightness(monitor.handle, brightness)) {
+          throw win32Error(api, "The monitor rejected the DDC/CI write probe");
+        }
+      },
+    }),
+  );
 }
 
 export function readNativeBrightness(endpointId: string): number {
