@@ -172,7 +172,7 @@ export class AutomationCoordinator {
         );
         const now = this.dependencies.clock.now();
         const elapsedSeconds = Math.max(0, now - monitor.lastTickAt) / 1_000;
-        const timeConstantSeconds = 8 - monitor.settings.responseSpeed * 7.5;
+        const timeConstantSeconds = 4 - monitor.settings.responseSpeed * 3.6;
         const smoothing = 1 - Math.exp(-elapsedSeconds / timeConstantSeconds);
         monitor.smoothedBrightness +=
           (target - monitor.smoothedBrightness) * smoothing;

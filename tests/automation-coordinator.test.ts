@@ -197,7 +197,7 @@ describe("content-responsive automation", () => {
     await dark.coordinator.tick();
     await sidebar.coordinator.tick();
 
-    expect((dark.commands[0] ?? 0) - (sidebar.commands[0] ?? 0)).toBeLessThanOrEqual(12);
+    expect((dark.commands[0] ?? 0) - (sidebar.commands[0] ?? 0)).toBeLessThanOrEqual(13);
   });
 
   it("gives central content more influence than an equal-sized edge region", async () => {
@@ -291,6 +291,16 @@ describe("content-responsive automation", () => {
 
     expect(fast.commands[0]).toBeLessThan(slow.commands[0] ?? 0);
     expect(fast.commands[0]).toBeGreaterThanOrEqual(20);
+  });
+
+  it("responds promptly at the balanced speed setting", async () => {
+    const harness = createHarness(solidFrame(255));
+
+    await harness.coordinator.start();
+    harness.clock.advance(1_000);
+    await harness.coordinator.tick();
+
+    expect(harness.commands).toEqual([39]);
   });
 
   it("never sends brightness commands less than 750 ms apart", async () => {

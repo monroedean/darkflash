@@ -33,19 +33,32 @@ describe("renderer build", () => {
       "utf8",
     );
     const pendingSnapshot = new Promise(() => undefined);
+    const browserContext = {
+      document: {
+        getElementById: () => ({ innerHTML: "" }),
+      },
+      window: {
+        darkflash: {
+          getSnapshot: () => pendingSnapshot,
+          onSnapshot: () => () => undefined,
+        },
+      },
+    };
 
     expect(() =>
-      runInNewContext(source, {
-        document: {
-          getElementById: () => ({ innerHTML: "" }),
-        },
-        window: {
-          darkflash: {
-            getSnapshot: () => pendingSnapshot,
-            onSnapshot: () => () => undefined,
-          },
-        },
-      }),
+      runInNewContext(source, browserContext),
     ).not.toThrow();
+    expect(
+      runInNewContext(
+        'formatSettingValue("responseSpeed", 0.5)',
+        browserContext,
+      ),
+    ).toBe("Balanced");
+    expect(
+      runInNewContext(
+        'formatSettingValue("responseSpeed", 0.9)',
+        browserContext,
+      ),
+    ).toBe("Very fast");
   });
 });

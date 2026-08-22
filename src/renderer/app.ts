@@ -71,10 +71,10 @@ function monitorCard(monitor: MonitorSnapshot): string {
         <span class="status status-${monitor.status.kind}">${statusName(monitor.status)}</span>
       </div>
       <div class="controls ${disabled}">
-        ${rangeControl(monitor, "minimumBrightness", "Minimum", "Lowest brightness allowed", 0, 100, 1, "%")}
-        ${rangeControl(monitor, "maximumBrightness", "Maximum", "Highest brightness allowed", 0, 100, 1, "%")}
-        ${rangeControl(monitor, "effectStrength", "Effect", "How strongly content moves brightness", 0, 1, 0.01, "%")}
-        ${rangeControl(monitor, "responseSpeed", "Response", "Slow and steady to quick adaptation", 0, 1, 0.01, "%")}
+        ${rangeControl(monitor, "minimumBrightness", "Minimum", "Lowest brightness allowed", 0, 100, 1)}
+        ${rangeControl(monitor, "maximumBrightness", "Maximum", "Highest brightness allowed", 0, 100, 1)}
+        ${rangeControl(monitor, "effectStrength", "Effect", "How strongly content moves brightness", 0, 1, 0.01)}
+        ${rangeControl(monitor, "responseSpeed", "Response speed", "How quickly brightness follows screen changes", 0, 1, 0.01)}
       </div>
     </article>
   `;
@@ -88,18 +88,15 @@ function rangeControl(
   minimum: number,
   maximum: number,
   step: number,
-  suffix: string,
 ): string {
   const value = monitor.settings[key];
-  const shownValue = key === "effectStrength" || key === "responseSpeed"
-    ? Math.round(value * 100)
-    : Math.round(value);
+  const shownValue = formatSettingValue(key, value);
   const disabled = monitor.settingsEditable ? "" : "disabled";
   return `
     <label class="range-row">
       <span class="range-copy"><strong>${label}</strong><small>${hint}</small></span>
-      <input type="range" data-setting="${key}" min="${minimum}" max="${maximum}" step="${step}" value="${value}" ${disabled}>
-      <output data-output="${key}">${shownValue}${suffix}</output>
+      <input type="range" data-setting="${key}" min="${minimum}" max="${maximum}" step="${step}" value="${value}" aria-valuetext="${shownValue}" ${disabled}>
+      <output data-output="${key}">${shownValue}</output>
     </label>
   `;
 }
@@ -118,7 +115,9 @@ function bindMonitor(monitor: MonitorSnapshot): void {
       );
       if (output !== null) {
         const value = Number(input.value);
-        output.value = `${key === "effectStrength" || key === "responseSpeed" ? Math.round(value * 100) : Math.round(value)}%`;
+        const shownValue = formatSettingValue(key, value);
+        output.value = shownValue;
+        input.setAttribute("aria-valuetext", shownValue);
       }
     });
     input.addEventListener("change", () => {
@@ -128,6 +127,23 @@ function bindMonitor(monitor: MonitorSnapshot): void {
       );
     });
   }
+}
+
+function formatSettingValue(
+  key: keyof MonitorSettings,
+  value: number,
+): string {
+  if (key === "responseSpeed") return responseSpeedLabel(value);
+  if (key === "effectStrength") return `${Math.round(value * 100)}%`;
+  return `${Math.round(value)}%`;
+}
+
+function responseSpeedLabel(value: number): string {
+  if (value < 0.2) return "Slow";
+  if (value < 0.4) return "Smooth";
+  if (value < 0.6) return "Balanced";
+  if (value < 0.8) return "Fast";
+  return "Very fast";
 }
 
 function readMonitorSettings(card: HTMLElement): MonitorSettings {
