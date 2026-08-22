@@ -56,4 +56,6 @@ Captured pixels stay in memory, are reduced to one luminance measurement, and ar
 
 ## License
 
-MIT
+Copyright © 2026 Dean Monroe.
+
+Darkflash is free software licensed under the [GNU General Public License version 3 only](LICENSE). It comes with absolutely no warranty.

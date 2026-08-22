@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Content-responsive physical monitor brightness for Windows 10",
   "main": "dist/main/index.js",
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "author": "Dean Monroe",
   "repository": {
     "type": "git",

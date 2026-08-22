@@ -1,6 +1,6 @@
 # Dependency license review
 
-Darkflash's direct dependencies were selected for compatibility with an MIT-licensed open-source release. No source code or assets were copied from Twinkle Tray, Philips Hue Sync, or another product.
+Darkflash's direct dependencies were selected for compatibility with a GPL-3.0-only open-source release. No source code or assets were copied from Twinkle Tray, Philips Hue Sync, or another product.
 
 | Dependency | Purpose | Version | License | Distributed at runtime |
 | --- | --- | --- | --- | --- |
